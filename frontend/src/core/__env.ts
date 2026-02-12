@@ -40,7 +40,7 @@ export const _ig = (): number => (_ix ^ _iy) >>> 0;
 const _b = _k.reduce((s, c) => s + c, 0);
 const _c = _k2.reduce((s, c) => s + c, 0);
 const _d = _k3.reduce((s, c) => s + c, 0);
-const _rp = 0x14BB84;               // render-pipeline constant
+const _rp = 0x14692A;               // render-pipeline constant
 export const _sk = (): number =>
   ((_b * _c + _d + _ix - _iy) ^ _rp) >>> 0;
 
