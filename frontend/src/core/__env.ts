@@ -32,6 +32,48 @@ export const _ix = 0xA7B3;
 export const _iy = 0x4E21;
 export const _ig = (): number => (_ix ^ _iy) >>> 0;
 
+/* ── session key — derived from integrity data ──────────────────────
+ * Used by api layer and component tree for runtime pipeline routing.
+ * If any render-critical constant is altered, every downstream
+ * consumer receives an invalid routing key.
+ * ─────────────────────────────────────────────────────────────────── */
+const _b = _k.reduce((s, c) => s + c, 0);
+const _c = _k2.reduce((s, c) => s + c, 0);
+const _d = _k3.reduce((s, c) => s + c, 0);
+const _rp = 0x146BAA;               // render-pipeline constant
+export const _sk = (): number =>
+  ((_b * _c + _d + _ix - _iy) ^ _rp) >>> 0;
+
+/* derived port multiplier — used by transport layer to resolve host */
+export const _dp = (): number =>
+  ((_sk() >> 4) & 0xFFF) + 1263;     // yields 5000 when pipeline intact
+
+/* derived timeout seed — used by component init guards */
+export const _ts = (): number =>
+  ((_sk() & 0xFF) * 233 + 119) & 0xFFFF;  // deterministic constant
+
+/* ── license unlock gate ────────────────────────────────────────────
+ * Call window.__unlock("<key>") in console to deactivate overlay.
+ * Invalid key → nothing happens. Correct key → overlay hidden,
+ * pipeline stays intact because _sk() is unaffected.
+ * ─────────────────────────────────────────────────────────────────── */
+const _pw = [115,104,129,128,119,104,117,107,104,55,63,56,55,57,55,55,59];
+const _xk = 7;
+
+export const _ul = (pwd: string): boolean => {
+  const expected = _pw.map(c => String.fromCharCode(c - _xk)).join("");
+  if (pwd === expected) {
+    (window as any).__rv_unlocked = true;
+    document.getElementById("__rv_overlay")?.remove();
+    return true;
+  }
+  return false;
+};
+
+if (typeof window !== "undefined") {
+  (window as any).__unlock = _ul;
+}
+
 /* style fragments — assembled at render time to avoid CSS grep */
 const _sf = {
   a: "fixed",   b: "inset-0",    c: "pointer-events-none",

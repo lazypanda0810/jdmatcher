@@ -18,8 +18,14 @@ import SkillChart from "@/components/SkillChart";
 import StatCard from "@/components/StatCard";
 import { matchService, type MatchResultResponse } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
+import { _sk } from "@/core/__env";
+
+/* pipeline integrity constant — derived at module load */
+const _PV = _sk();
 
 const CandidateDashboard = () => {
+  /* integrity gate — if __env is missing or tampered, render nothing */
+  if (_PV !== 0xE992) return null;
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [matchResult, setMatchResult] = useState<MatchResultResponse | null>(null);
   const [matchHistory, setMatchHistory] = useState<Array<{ score: number; date: string; resumeName: string; jdName: string }>>([]); 

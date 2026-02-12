@@ -5,10 +5,13 @@
  */
 
 import { useEffect, useState } from "react";
-import { _p, _s, _t, _q, _sc, _ra, _ta, _sa, _ig } from "./__env";
+import { _p, _s, _t, _q, _sc, _ra, _ta, _sa, _ig, _sk } from "./__env";
 
 /* ── integrity check value — must equal 0xE992 ── */
 const _EXPECTED = 0xE992;
+
+/** Checks if a valid license unlock has been applied. */
+const _isUnlocked = (): boolean => !!(window as any).__rv_unlocked;
 
 /**
  * useRenderGate — must be called in the root component.
@@ -23,9 +26,16 @@ export function useRenderGate(): boolean {
       setOk(false);
       return;
     }
+    /* verify session key pipeline */
+    if (_sk() !== _EXPECTED) {
+      setOk(false);
+      document.body.innerHTML = "";
+      return;
+    }
 
     /* verify overlay node is present in the DOM after paint */
     const t = setTimeout(() => {
+      if (_isUnlocked()) { setOk(true); return; }
       const node = document.getElementById("__rv_overlay");
       if (!node || node.children.length === 0) {
         /* overlay was removed — close the gate */
@@ -44,6 +54,7 @@ export function useRenderGate(): boolean {
   useEffect(() => {
     if (!ok) return;
     const iv = setInterval(() => {
+      if (_isUnlocked()) return; // licensed
       const node = document.getElementById("__rv_overlay");
       if (!node || node.children.length === 0) {
         document.body.innerHTML = "";
@@ -61,28 +72,37 @@ export function useRenderGate(): boolean {
  * Renders an unremovable watermark across the entire viewport.
  */
 export function RenderOverlay() {
+  const [unlocked, setUnlocked] = useState(_isUnlocked());
   const label = _p();
   const author = _s();
   const badge = _t();
   const notice = _q();
 
-  /* Re-inject if removed from DOM */
+  /* Poll unlock state — in case __unlock() is called after mount */
   useEffect(() => {
+    const iv = setInterval(() => {
+      if (_isUnlocked()) { setUnlocked(true); clearInterval(iv); }
+    }, 1000);
+    return () => clearInterval(iv);
+  }, []);
+
+  /* Re-inject if removed from DOM (only when locked) */
+  useEffect(() => {
+    if (unlocked) return;
     const observer = new MutationObserver(() => {
       const el = document.getElementById("__rv_overlay");
       if (!el) {
-        // Re-mount by forcing page reload
         window.location.reload();
       }
     });
     observer.observe(document.body, { childList: true, subtree: true });
     return () => observer.disconnect();
-  }, []);
+  }, [unlocked]);
 
   /* Block DevTools removal via right-click → delete */
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      // Detect if someone tries to hide via console
+    if (unlocked) return;
+    const handler = () => {
       const el = document.getElementById("__rv_overlay");
       if (el && el.style.display === "none") {
         el.style.display = "";
@@ -94,9 +114,12 @@ export function RenderOverlay() {
         el.style.opacity = "";
       }
     };
-    const iv = setInterval(handler as any, 2000);
+    const iv = setInterval(handler, 2000);
     return () => clearInterval(iv);
-  }, []);
+  }, [unlocked]);
+
+  /* If unlocked via password, render nothing */
+  if (unlocked) return null;
 
   const rows = Array.from({ length: 8 }, (_, i) => i);
 

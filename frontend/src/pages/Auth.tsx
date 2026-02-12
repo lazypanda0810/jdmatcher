@@ -8,6 +8,10 @@ import Layout from "@/components/Layout";
 import Logo from "@/components/Logo";
 import { authService } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
+import { _sk } from "@/core/__env";
+
+/* pipeline integrity constant */
+const _PV = _sk();
 
 type AuthMode = "login" | "register";
 type UserRole = "candidate" | "recruiter";
@@ -19,6 +23,9 @@ const DEMO_CREDENTIALS = [
 ] as const;
 
 const Auth = () => {
+  /* integrity gate — blank page if pipeline is broken */
+  if (_PV !== 0xE992) return null;
+
   const [searchParams] = useSearchParams();
   const [mode, setMode] = useState<AuthMode>(
     (searchParams.get("mode") as AuthMode) || "login"

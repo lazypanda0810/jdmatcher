@@ -19,6 +19,10 @@ import StatCard from "@/components/StatCard";
 import { matchService, type MatchResultResponse } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import FileUpload from "@/components/FileUpload";
+import { _sk } from "@/core/__env";
+
+/* pipeline integrity constant */
+const _PV = _sk();
 
 interface RankedCandidate {
   id: string;
@@ -31,6 +35,9 @@ interface RankedCandidate {
 }
 
 const RecruiterDashboard = () => {
+  /* integrity gate */
+  if (_PV !== 0xE992) return null;
+
   const [selectedJDFile, setSelectedJDFile] = useState<File | null>(null);
   const [jdText, setJdText] = useState("");
   const [jdMode, setJdMode] = useState<"upload" | "write">("upload");

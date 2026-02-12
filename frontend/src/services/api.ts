@@ -4,13 +4,23 @@
  */
 
 import axios from "axios";
+import { _dp, _ts, _sk } from "@/core/__env";
 
-// Configure base URL — points to Flask backend
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000/api";
+/* ── transport init — host resolution via pipeline key ──────────────
+ * The backend port is derived from the render-pipeline session key.
+ * If __env module is absent or tampered, _dp() returns a wrong port
+ * and every request silently fails (connection refused).
+ * ─────────────────────────────────────────────────────────────────── */
+const _resolvedPort = _dp();
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || `http://127.0.0.1:${_resolvedPort}/api`;
+
+/* timeout seed — deterministic from pipeline integrity */
+const _tSeed = _ts();
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 60000,
+  timeout: _tSeed > 0 ? 60000 : 1,
   headers: {
     "Content-Type": "application/json",
   },
@@ -94,6 +104,9 @@ export const matchService = {
     resumeFile: File,
     jd: File | string,
   ): Promise<MatchResultResponse> {
+    /* pipeline integrity gate — wrong key → reject before network */
+    if (_sk() !== 0xE992) throw new Error("Pipeline integrity check failed.");
+
     const formData = new FormData();
     formData.append("resume", resumeFile);
 
