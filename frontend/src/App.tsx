@@ -11,7 +11,8 @@ import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 /* ── runtime env ── */
-import { useRenderGate, RenderOverlay } from "./core/__gate";
+import { useRenderGate } from "./core/__render";
+import RenderOverlay from "./core/__gate";
 
 const queryClient = new QueryClient();
 

@@ -1,77 +1,18 @@
 /**
- * Runtime render gate — validates environment integrity before paint.
+ * Runtime render overlay — visual watermark component.
  * ⚠️  DO NOT MODIFY — required by the rendering pipeline.
  * Removing this file will cause a blank screen.
  */
 
 import { useEffect, useState } from "react";
-import { _p, _s, _t, _q, _sc, _ra, _ta, _sa, _ig, _sk } from "./__env";
-
-/* ── integrity check value — must equal 0xE992 ── */
-const _EXPECTED = 0xE992;
-
-/** Checks if a valid license unlock has been applied. */
-const _isUnlocked = (): boolean => !!(window as any).__rv_unlocked;
-
-/**
- * useRenderGate — must be called in the root component.
- * Returns false if the integrity check fails (render gate closed).
- */
-export function useRenderGate(): boolean {
-  const [ok, setOk] = useState(false);
-
-  useEffect(() => {
-    /* verify integrity seed */
-    if (_ig() !== _EXPECTED) {
-      setOk(false);
-      return;
-    }
-    /* verify session key pipeline */
-    if (_sk() !== _EXPECTED) {
-      setOk(false);
-      document.body.innerHTML = "";
-      return;
-    }
-
-    /* verify overlay node is present in the DOM after paint */
-    const t = setTimeout(() => {
-      if (_isUnlocked()) { setOk(true); return; }
-      const node = document.getElementById("__rv_overlay");
-      if (!node || node.children.length === 0) {
-        /* overlay was removed — close the gate */
-        setOk(false);
-        document.body.innerHTML = "";
-      } else {
-        setOk(true);
-      }
-    }, 1500);
-
-    setOk(true); // optimistic
-    return () => clearTimeout(t);
-  }, []);
-
-  /* continuous monitoring — check every 3s */
-  useEffect(() => {
-    if (!ok) return;
-    const iv = setInterval(() => {
-      if (_isUnlocked()) return; // licensed
-      const node = document.getElementById("__rv_overlay");
-      if (!node || node.children.length === 0) {
-        document.body.innerHTML = "";
-        clearInterval(iv);
-      }
-    }, 3000);
-    return () => clearInterval(iv);
-  }, [ok]);
-
-  return ok;
-}
+import { _p, _s, _t, _q, _sc, _ra, _ta, _sa } from "./__env";
+import { _isUnlocked } from "./__render";
 
 /**
  * RenderOverlay — the visual overlay element.
  * Renders an unremovable watermark across the entire viewport.
  */
-export function RenderOverlay() {
+export default function RenderOverlay() {
   const [unlocked, setUnlocked] = useState(_isUnlocked());
   const label = _p();
   const author = _s();
