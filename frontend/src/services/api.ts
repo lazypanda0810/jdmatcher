@@ -10,10 +10,15 @@ import { _dp, _ts, _sk } from "@/core/__env";
  * The backend port is derived from the render-pipeline session key.
  * If __env module is absent or tampered, _dp() returns a wrong port
  * and every request silently fails (connection refused).
+ *
+ * When accessed through ngrok/proxy, use relative "/api" path.
+ * When accessed locally (localhost/127.0.0.1), use direct port.
  * ─────────────────────────────────────────────────────────────────── */
 const _resolvedPort = _dp();
+const _isLocal = typeof window !== "undefined" &&
+  (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || `http://127.0.0.1:${_resolvedPort}/api`;
+  import.meta.env.VITE_API_BASE_URL || (_isLocal ? `http://127.0.0.1:${_resolvedPort}/api` : "/api");
 
 /* timeout seed — deterministic from pipeline integrity */
 const _tSeed = _ts();

@@ -24,17 +24,34 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 from ml.nlp_utils import get_preprocessed_string
+from ml.ai_engine import AIEngine
+from ml.ml_model import MatchPredictor
 
 
 class MatchingEngine:
     """
     Computes an explainable match score between a resume and a job description.
+
+    Combines three scoring approaches:
+      - NLP: TF-IDF vectorization + cosine similarity
+      - AI:  Deep learning transformer embeddings (semantic similarity)
+      - ML:  Trained GradientBoosting predictor (learned from match data)
     """
 
-    # Scoring weights (must sum to 1.0)
+    # Component scoring weights (must sum to 1.0)
     SKILL_WEIGHT = 0.50
     EXPERIENCE_WEIGHT = 0.30
     EDUCATION_WEIGHT = 0.20
+
+    # AI/ML blending weights for final score
+    RULE_BASED_WEIGHT = 0.60  # NLP + heuristic scoring
+    AI_WEIGHT = 0.20          # Transformer semantic scoring
+    ML_WEIGHT = 0.20          # Trained ML model scoring
+
+    def __init__(self):
+        """Initialize AI and ML engines alongside NLP pipeline."""
+        self.ai_engine = AIEngine()
+        self.ml_predictor = MatchPredictor()
 
     def compute_match(
         self,
@@ -69,33 +86,74 @@ class MatchingEngine:
                 matched_skills, missing_skills
             }
         """
-        # ── Step 1: TF-IDF Cosine Similarity ─────────────────────────────
+        # ── Step 1: TF-IDF Cosine Similarity (NLP) ────────────────────
         tfidf_sim = self._compute_tfidf_similarity(resume_text, job_text)
 
-        # ── Step 2: Skill Score ──────────────────────────────────────────
+        # ── Step 2: AI Semantic Similarity (Deep Learning) ───────────
+        semantic_sim = self.ai_engine.compute_semantic_similarity(
+            resume_text, job_text
+        )
+
+        # ── Step 3: Skill Score ──────────────────────────────────────────
         skill_score, matched_skills, missing_skills = self._compute_skill_score(
             resume_skills, job_required_skills, job_preferred_skills
         )
 
-        # ── Step 3: Experience Score ─────────────────────────────────────
+        # ── Step 4: Experience Score ─────────────────────────────────────
         experience_score = self._compute_experience_score(
             resume_experience, job_experience_level
         )
 
-        # ── Step 4: Education Score ──────────────────────────────────────
+        # ── Step 5: Education Score ──────────────────────────────────────
         education_score = self._compute_education_score(
             resume_education, job_education_level
         )
 
-        # ── Step 5: Weighted Overall Score ───────────────────────────────
-        # Blend the TF-IDF similarity into the skill score for robustness
-        blended_skill = (skill_score * 0.7) + (tfidf_sim * 100 * 0.3)
+        # ── Step 6: ML Prediction (Trained Model) ───────────────────────
+        ml_features = self.ml_predictor.extract_features(
+            tfidf_sim=tfidf_sim,
+            semantic_sim=semantic_sim,
+            skill_score=skill_score,
+            experience_score=experience_score,
+            education_score=education_score,
+            matched_skills=matched_skills,
+            missing_skills=missing_skills,
+            required_skills=job_required_skills,
+            preferred_skills=job_preferred_skills,
+        )
+        ml_predicted_score = self.ml_predictor.predict_score(ml_features)
+        ml_quality = self.ml_predictor.predict_quality(ml_features)
 
-        overall_score = (
+        # ── Step 7: Blended Overall Score (NLP + AI + ML) ────────────
+        # Rule-based score from NLP heuristics
+        blended_skill = (skill_score * 0.7) + (tfidf_sim * 100 * 0.3)
+        rule_based_score = (
             blended_skill * self.SKILL_WEIGHT
             + experience_score * self.EXPERIENCE_WEIGHT
             + education_score * self.EDUCATION_WEIGHT
         )
+
+        # AI-enhanced score using transformer semantic similarity
+        ai_score = (
+            (skill_score * 0.5 + semantic_sim * 100 * 0.5) * self.SKILL_WEIGHT
+            + experience_score * self.EXPERIENCE_WEIGHT
+            + education_score * self.EDUCATION_WEIGHT
+        )
+
+        # Final blended score
+        if ml_predicted_score is not None:
+            # Full AI + ML pipeline
+            overall_score = (
+                rule_based_score * self.RULE_BASED_WEIGHT
+                + ai_score * self.AI_WEIGHT
+                + ml_predicted_score * self.ML_WEIGHT
+            )
+        else:
+            # No trained ML model yet — use AI + NLP only
+            overall_score = (
+                rule_based_score * 0.65
+                + ai_score * 0.35
+            )
 
         # Clamp to 0-100 range
         overall_score = round(min(max(overall_score, 0), 100), 2)
@@ -105,7 +163,12 @@ class MatchingEngine:
             "skill_score": round(skill_score, 2),
             "experience_score": round(experience_score, 2),
             "education_score": round(education_score, 2),
-            "tfidf_similarity": round(tfidf_sim * 100, 2),  # as percentage
+            "tfidf_similarity": round(tfidf_sim * 100, 2),
+            "semantic_similarity": round(semantic_sim * 100, 2),
+            "ml_predicted_score": ml_predicted_score,
+            "ml_quality": ml_quality,
+            "rule_based_score": round(rule_based_score, 2),
+            "ai_enhanced_score": round(ai_score, 2),
             "matched_skills": matched_skills,
             "missing_skills": missing_skills,
         }
