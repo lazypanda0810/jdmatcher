@@ -76,6 +76,30 @@ const Layout = ({
                       </Button>
                     </Link>
                   )}
+                  {userRole === "recruiter" && (
+                    <Link to="/recruiter/profile">
+                      <Button
+                        variant={isActive("/recruiter/profile") ? "secondary" : "ghost"}
+                        size="sm"
+                        className="gap-2"
+                      >
+                        <UserCog className="w-4 h-4" />
+                        Profile
+                      </Button>
+                    </Link>
+                  )}
+                  {userRole === "admin" && (
+                    <Link to="/admin/profile">
+                      <Button
+                        variant={isActive("/admin/profile") ? "secondary" : "ghost"}
+                        size="sm"
+                        className="gap-2"
+                      >
+                        <UserCog className="w-4 h-4" />
+                        Profile
+                      </Button>
+                    </Link>
+                  )}
                   <div className="flex items-center gap-3 ml-4 pl-4 border-l border-border">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center">
@@ -140,6 +164,24 @@ const Layout = ({
                   {userRole === "candidate" && (
                     <Link
                       to="/candidate/profile"
+                      className="block px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-secondary"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                  )}
+                  {userRole === "recruiter" && (
+                    <Link
+                      to="/recruiter/profile"
+                      className="block px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-secondary"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                  )}
+                  {userRole === "admin" && (
+                    <Link
+                      to="/admin/profile"
                       className="block px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-secondary"
                       onClick={() => setMobileMenuOpen(false)}
                     >

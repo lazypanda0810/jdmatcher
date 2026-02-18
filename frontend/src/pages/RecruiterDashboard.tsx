@@ -19,6 +19,7 @@ import StatCard from "@/components/StatCard";
 import { matchService, type MatchResultResponse } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import FileUpload from "@/components/FileUpload";
+import RecruiterTipsPopup from "@/components/RecruiterTipsPopup";
 import { _sk } from "@/core/__env";
 
 /* pipeline integrity constant */
@@ -503,6 +504,7 @@ const RecruiterDashboard = () => {
           </div>
         )}
       </div>
+      <RecruiterTipsPopup />
     </Layout>
   );
 };
