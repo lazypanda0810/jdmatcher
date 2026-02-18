@@ -9,6 +9,11 @@ import {
   Search,
   Upload,
   PenLine,
+  AlertTriangle,
+  BookOpen,
+  Briefcase,
+  GraduationCap,
+  Code,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/Layout";
@@ -16,6 +21,7 @@ import FileUpload from "@/components/FileUpload";
 import MatchScoreRing from "@/components/MatchScoreRing";
 import SkillChart from "@/components/SkillChart";
 import StatCard from "@/components/StatCard";
+import ResumeTipsPopup from "@/components/ResumeTipsPopup";
 import { matchService, type MatchResultResponse } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { _sk } from "@/core/__env";
@@ -350,10 +356,117 @@ const CandidateDashboard = () => {
                   </ul>
                 </div>
               )}
+
+              {/* Resume Parsed Summary */}
+              <div className="bg-card border border-border rounded-xl p-6 shadow-card">
+                <h3 className="text-base font-heading font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-accent" />
+                  Your Resume Summary
+                </h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-foreground mb-2 flex items-center gap-1.5">
+                      <Code className="w-3.5 h-3.5 text-info" /> Skills Found
+                    </h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {matchResult.resume_parsed.skills.length > 0 ? matchResult.resume_parsed.skills.map((s) => (
+                        <span key={s} className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-info/10 text-info border border-info/20">{s}</span>
+                      )) : <p className="text-xs text-muted-foreground">No skills detected</p>}
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-foreground mb-2 flex items-center gap-1.5">
+                      <GraduationCap className="w-3.5 h-3.5 text-success" /> Education
+                    </h4>
+                    {matchResult.resume_parsed.education.length > 0 ? matchResult.resume_parsed.education.map((e, i) => (
+                      <p key={i} className="text-xs text-muted-foreground">{e}</p>
+                    )) : <p className="text-xs text-muted-foreground">No education info detected</p>}
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-foreground mb-2 flex items-center gap-1.5">
+                      <Briefcase className="w-3.5 h-3.5 text-warning" /> Experience
+                    </h4>
+                    {matchResult.resume_parsed.experience.length > 0 ? matchResult.resume_parsed.experience.map((e, i) => (
+                      <p key={i} className="text-xs text-muted-foreground">{e}</p>
+                    )) : <p className="text-xs text-muted-foreground">No experience info detected</p>}
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-foreground mb-2 flex items-center gap-1.5">
+                      <BookOpen className="w-3.5 h-3.5 text-accent" /> Projects
+                    </h4>
+                    {matchResult.resume_parsed.projects.length > 0 ? matchResult.resume_parsed.projects.map((p, i) => (
+                      <p key={i} className="text-xs text-muted-foreground">{p}</p>
+                    )) : <p className="text-xs text-muted-foreground">No projects detected</p>}
+                  </div>
+                </div>
+              </div>
+
+              {/* Resume Flaws / Warnings */}
+              <div className="bg-card border border-warning/30 rounded-xl p-6 shadow-card">
+                <h3 className="text-base font-heading font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-warning" />
+                  Resume Flaws & Warnings
+                </h3>
+                <div className="space-y-3">
+                  {matchResult.missing_skills.length > 0 && (
+                    <div className="flex items-start gap-2">
+                      <span className="mt-0.5 w-5 h-5 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0">
+                        <AlertCircle className="w-3 h-3 text-destructive" />
+                      </span>
+                      <p className="text-sm text-muted-foreground">
+                        <strong className="text-foreground">Missing {matchResult.missing_skills.length} key skills</strong> — {matchResult.missing_skills.slice(0, 5).join(", ")}{matchResult.missing_skills.length > 5 ? ` and ${matchResult.missing_skills.length - 5} more` : ""}.
+                      </p>
+                    </div>
+                  )}
+                  {matchResult.skill_score < 50 && (
+                    <div className="flex items-start gap-2">
+                      <span className="mt-0.5 w-5 h-5 rounded-full bg-warning/10 flex items-center justify-center flex-shrink-0">
+                        <AlertTriangle className="w-3 h-3 text-warning" />
+                      </span>
+                      <p className="text-sm text-muted-foreground">Low skill alignment ({Math.round(matchResult.skill_score)}%) — consider adding relevant technical skills.</p>
+                    </div>
+                  )}
+                  {matchResult.experience_score < 50 && (
+                    <div className="flex items-start gap-2">
+                      <span className="mt-0.5 w-5 h-5 rounded-full bg-warning/10 flex items-center justify-center flex-shrink-0">
+                        <AlertTriangle className="w-3 h-3 text-warning" />
+                      </span>
+                      <p className="text-sm text-muted-foreground">Experience alignment is low ({Math.round(matchResult.experience_score)}%) — highlight more relevant work experience.</p>
+                    </div>
+                  )}
+                  {matchResult.education_score < 50 && (
+                    <div className="flex items-start gap-2">
+                      <span className="mt-0.5 w-5 h-5 rounded-full bg-warning/10 flex items-center justify-center flex-shrink-0">
+                        <AlertTriangle className="w-3 h-3 text-warning" />
+                      </span>
+                      <p className="text-sm text-muted-foreground">Education match is weak ({Math.round(matchResult.education_score)}%) — include relevant certifications or coursework.</p>
+                    </div>
+                  )}
+                  {matchResult.resume_parsed.skills.length < 5 && (
+                    <div className="flex items-start gap-2">
+                      <span className="mt-0.5 w-5 h-5 rounded-full bg-info/10 flex items-center justify-center flex-shrink-0">
+                        <Lightbulb className="w-3 h-3 text-info" />
+                      </span>
+                      <p className="text-sm text-muted-foreground">Only {matchResult.resume_parsed.skills.length} skills were detected. Consider adding a dedicated skills section with keywords.</p>
+                    </div>
+                  )}
+                  {matchResult.overall_score >= 70 && matchResult.missing_skills.length === 0 && matchResult.skill_score >= 50 && matchResult.experience_score >= 50 && matchResult.education_score >= 50 && matchResult.resume_parsed.skills.length >= 5 && (
+                    <div className="flex items-start gap-2">
+                      <span className="mt-0.5 w-5 h-5 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0">
+                        <CheckCircle className="w-3 h-3 text-success" />
+                      </span>
+                      <p className="text-sm text-success font-medium">Great job! No major flaws detected in your resume for this role.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* Resume Tips Popup */}
+      <ResumeTipsPopup />
     </Layout>
   );
 };

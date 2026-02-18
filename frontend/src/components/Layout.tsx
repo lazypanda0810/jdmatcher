@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, LogOut, User, LayoutDashboard } from "lucide-react";
+import { Menu, X, LogOut, User, LayoutDashboard, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/Logo";
+import ThemeToggle from "@/components/ThemeToggle";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -63,6 +64,18 @@ const Layout = ({
                       Dashboard
                     </Button>
                   </Link>
+                  {userRole === "candidate" && (
+                    <Link to="/candidate/profile">
+                      <Button
+                        variant={isActive("/candidate/profile") ? "secondary" : "ghost"}
+                        size="sm"
+                        className="gap-2"
+                      >
+                        <UserCog className="w-4 h-4" />
+                        Profile
+                      </Button>
+                    </Link>
+                  )}
                   <div className="flex items-center gap-3 ml-4 pl-4 border-l border-border">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center">
@@ -72,6 +85,7 @@ const Layout = ({
                         {userName || "User"}
                       </span>
                     </div>
+                    <ThemeToggle />
                     <Button
                       variant="ghost"
                       size="sm"
@@ -84,6 +98,7 @@ const Layout = ({
                 </>
               ) : (
                 <>
+                  <ThemeToggle />
                   <Link to="/auth?mode=login">
                     <Button variant="ghost" size="sm">
                       Login
@@ -122,6 +137,19 @@ const Layout = ({
                   >
                     Dashboard
                   </Link>
+                  {userRole === "candidate" && (
+                    <Link
+                      to="/candidate/profile"
+                      className="block px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-secondary"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                  )}
+                  <div className="px-3 py-2 flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Theme</span>
+                    <ThemeToggle />
+                  </div>
                   <button
                     onClick={() => {
                       handleLogout();
@@ -134,6 +162,10 @@ const Layout = ({
                 </>
               ) : (
                 <>
+                  <div className="px-3 py-2 flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Theme</span>
+                    <ThemeToggle />
+                  </div>
                   <Link
                     to="/auth?mode=login"
                     className="block px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-secondary"
