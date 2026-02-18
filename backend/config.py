@@ -33,8 +33,8 @@ class Config:
         "UPLOAD_FOLDER",
         os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploads"),
     )
-    MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", 5 * 1024 * 1024))  # 5 MB
-    ALLOWED_EXTENSIONS = {"pdf", "docx"}
+    MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", 50 * 1024 * 1024))  # 50 MB for bulk/zip uploads
+    ALLOWED_EXTENSIONS = {"pdf", "docx", "zip"}
 
     # ── CORS Settings ────────────────────────────────────────────────────
     CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*")

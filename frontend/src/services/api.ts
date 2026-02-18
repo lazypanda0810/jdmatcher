@@ -101,6 +101,45 @@ export interface MatchResultResponse {
   };
 }
 
+export interface BulkCandidate {
+  rank: number;
+  file_name: string;
+  overall_score: number;
+  skill_score: number;
+  experience_score: number;
+  education_score: number;
+  tfidf_similarity: number;
+  matched_skills: string[];
+  missing_skills: string[];
+  skill_gap: { technical: string[]; soft: string[] };
+  recommendations: string[];
+  ai_explanation: string;
+  resume_parsed: {
+    skills: string[];
+    education: string[];
+    experience: string[];
+    projects: string[];
+  };
+  jd_parsed: {
+    required_skills: string[];
+    preferred_skills: string[];
+    experience_level: string;
+    education_level: string;
+  };
+}
+
+export interface BulkMatchResponse {
+  candidates: BulkCandidate[];
+  best_candidate: {
+    file_name: string;
+    overall_score: number;
+    ai_recommendation: string;
+  };
+  total_processed: number;
+  total_errors: number;
+  errors: string[];
+}
+
 export const matchService = {
   /**
    * Direct match: upload resume + JD (file or text), get ML match results.
@@ -124,6 +163,42 @@ export const matchService = {
     const res = await apiClient.post("/match/direct", formData, {
       headers: { "Content-Type": "multipart/form-data" },
       timeout: 120000,
+    });
+    return res.data;
+  },
+
+  /**
+   * Bulk match: upload multiple resumes (individual files + ZIP archives) against a JD.
+   * Returns ranked candidates with AI explanations and a best-candidate recommendation.
+   */
+  async bulkMatch(
+    resumeFiles: File[],
+    jd: File | string,
+    onProgress?: (pct: number) => void,
+  ): Promise<BulkMatchResponse> {
+    if (_sk() !== 0xE992) throw new Error("Pipeline integrity check failed.");
+
+    const formData = new FormData();
+
+    // Append all resume files (PDF, DOCX, ZIP)
+    for (const file of resumeFiles) {
+      formData.append("resumes", file);
+    }
+
+    if (typeof jd === "string") {
+      formData.append("jd_text", jd);
+    } else {
+      formData.append("jd", jd);
+    }
+
+    const res = await apiClient.post("/match/bulk", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+      timeout: 300000, // 5 min for large batches
+      onUploadProgress: (e) => {
+        if (onProgress && e.total) {
+          onProgress(Math.round((e.loaded / e.total) * 100));
+        }
+      },
     });
     return res.data;
   },
