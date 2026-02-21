@@ -7,6 +7,11 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     port: 8080,
+    allowedHosts: [
+      "nontesting-reservable-josiah.ngrok-free.dev",
+      ".ngrok-free.dev",
+      ".ngrok.io",
+    ],
     proxy: {
       "/api": {
         target: "http://127.0.0.1:5000",
