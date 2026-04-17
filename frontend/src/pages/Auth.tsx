@@ -68,6 +68,14 @@ const Auth = () => {
       toast({ title: "Validation Error", description: "Password must be at least 6 characters.", variant: "destructive" });
       return;
     }
+    if (mode === "register" && !/[A-Z]/.test(password)) {
+      toast({ title: "Validation Error", description: "Password must contain at least one uppercase letter.", variant: "destructive" });
+      return;
+    }
+    if (mode === "register" && !/[0-9]/.test(password)) {
+      toast({ title: "Validation Error", description: "Password must contain at least one digit (0-9).", variant: "destructive" });
+      return;
+    }
 
     setLoading(true);
     try {
@@ -80,14 +88,15 @@ const Auth = () => {
         const redirectMap: Record<string, string> = { candidate: "/candidate", recruiter: "/recruiter", admin: "/admin" };
         navigate(redirectMap[userData.role] || "/candidate");
       } else {
-        const result = await authService.register(email, password, role);
+        const result = await authService.register(email, password, role, name);
         localStorage.setItem("auth_token", result.token);
         localStorage.setItem("user", JSON.stringify({ ...result.user, name, role }));
         toast({ title: "Account created!", description: "Welcome to ResumeAI." });
         navigate(role === "recruiter" ? "/recruiter" : "/candidate");
       }
-    } catch {
-      toast({ title: "Error", description: "Invalid credentials. Please use a demo account.", variant: "destructive" });
+    } catch (error: any) {
+      const errorMsg = error?.response?.data?.error || "Registration failed. Please try again.";
+      toast({ title: "Error", description: errorMsg, variant: "destructive" });
     } finally {
       setLoading(false);
     }

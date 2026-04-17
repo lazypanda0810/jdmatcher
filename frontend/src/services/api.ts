@@ -49,7 +49,8 @@ export const authService = {
   },
 
   async register(email: string, password: string, role: "candidate" | "recruiter", name?: string) {
-    const res = await apiClient.post("/auth/register", { email, password, role, name: name || email.split("@")[0] });
+    const capitalizedRole = role.charAt(0).toUpperCase() + role.slice(1);
+    const res = await apiClient.post("/auth/register", { email, password, role: capitalizedRole, name: name || email.split("@")[0] });
     return res.data;
   },
 

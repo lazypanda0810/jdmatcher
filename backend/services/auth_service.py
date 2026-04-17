@@ -75,9 +75,22 @@ class AuthService:
         # Step 6: Create user
         user_id = self.user_model.create_user(name, email, password, role)
 
+        # Generate JWT token for immediate login after registration
+        token = generate_token(
+            user_id=str(user_id),
+            email=email,
+            role=role,
+        )
+
         return {
             "message": "Registration successful.",
-            "user_id": user_id,
+            "token": token,
+            "user": {
+                "id": str(user_id),
+                "name": name,
+                "email": email,
+                "role": role,
+            },
         }, 201
 
     # ── Login ────────────────────────────────────────────────────────────
