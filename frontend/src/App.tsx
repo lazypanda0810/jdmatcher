@@ -14,25 +14,16 @@ import AdminPanel from "./pages/AdminPanel";
 import AdminProfile from "./pages/AdminProfile";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
-/* ── runtime env ── */
-import { useRenderGate } from "./core/__render";
-import RenderOverlay from "./core/__gate";
 
 const queryClient = new QueryClient();
 
 const App = () => {
-  /* render gate — required for paint pipeline integrity */
-  const _rg = useRenderGate();
-  if (!_rg) return null;
-
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          {/* runtime overlay — do not remove */}
-          <RenderOverlay />
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Landing />} />
